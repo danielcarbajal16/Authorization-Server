@@ -23,6 +23,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
@@ -95,7 +96,41 @@ public class ProjectSecurityConfig {
             )
             .build();
 
-        return new InMemoryRegisteredClientRepository(clientCredentialsClient);
+        RegisteredClient authCodeClient = RegisteredClient.withId(UUID.randomUUID().toString())
+            .clientId("eazybankclient")
+            .clientSecret("{noop}Qw3rTy6UjMnB9zXcV2pL0sKjHn5TxQqB")
+            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+            .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+            .redirectUri("https://oauth.pstmn.io/v1/callback")
+            .scopes(scopeConfig -> scopeConfig.addAll(List.of(OidcScopes.OPENID, OidcScopes.EMAIL)))
+            .tokenSettings(TokenSettings.builder()
+                .accessTokenTimeToLive(Duration.ofMinutes(10))
+                .refreshTokenTimeToLive(Duration.ofHours(8))
+                .reuseRefreshTokens(false)
+                .accessTokenFormat(OAuth2TokenFormat.SELF_CONTAINED)
+                .build()
+            )
+            .build();
+
+        RegisteredClient pkceClient = RegisteredClient.withId(UUID.randomUUID().toString())
+            .clientId("eazypublicclient")
+            .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+            .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+            .redirectUri("https://oauth.pstmn.io/v1/callback")
+            .scopes(scopeConfig -> scopeConfig.addAll(List.of(OidcScopes.OPENID, OidcScopes.EMAIL)))
+            .clientSettings(ClientSettings.builder().requireProofKey(true).build())
+            .tokenSettings(TokenSettings.builder()
+                .accessTokenTimeToLive(Duration.ofMinutes(10))
+                .refreshTokenTimeToLive(Duration.ofHours(8))
+                .reuseRefreshTokens(false)
+                .accessTokenFormat(OAuth2TokenFormat.SELF_CONTAINED)
+                .build()
+            )
+            .build();
+
+        return new InMemoryRegisteredClientRepository(clientCredentialsClient, authCodeClient, pkceClient);
     }
 
     @Bean
