@@ -188,7 +188,7 @@ public class ProjectSecurityConfig {
                     if (context.getAuthorizationGrantType().equals(AuthorizationGrantType.CLIENT_CREDENTIALS)) {
                         Set<String> roles = context.getClaims().build().getClaim("scope");
                         claims.put("roles", roles);
-                    } else if (context.getAuthorizationGrantType().equals(AuthorizationGrantType.AUTHORIZATION_CODE)) {
+                    } else if (context.getAuthorizationGrantType().equals(AuthorizationGrantType.AUTHORIZATION_CODE) || context.getAuthorizationGrantType().equals(AuthorizationGrantType.REFRESH_TOKEN)) {
                         Set<String> roles = AuthorityUtils.authorityListToSet(context.getPrincipal().getAuthorities())
                             .stream()
                             .map(c -> c.replaceFirst("^ROLE_", ""))
